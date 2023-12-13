@@ -22,6 +22,7 @@ THREADS = int(os.environ.get('THREADS', 5))
 URL_PARAMS = {"page": 1, "page_size": 0}
 # comma separated list of project/repositories to ignore (won't create a metric in prometheus), for example: 'project/repo1,project/repo2'
 IGNORE_REPOSITORIES = [repo.strip() for repo in os.environ.get('IGNORE_REPOSITORIES', "").split(',') if repo.strip()]
+PROJECTS_TO_EXPORT = [project.strip() for project in os.environ.get('PROJECTS_TO_EXPORT', "").split(',') if project.strip()]
 
 
 if not HARBOR_API_URL:
@@ -152,6 +153,9 @@ class CustomCollector:
 
         """
         try:
+            if f'{project["name"]}' not in PROJECTS_TO_EXPORT:
+                logging.debug(f'Project {project["name"]} is not in the list to export. Skipping.')
+                return
             url = f'{HARBOR_API_URL}/projects/{project["name"]}/repositories'
             response = requests.get(url, params=URL_PARAMS, auth=AUTH)
             response.raise_for_status()
